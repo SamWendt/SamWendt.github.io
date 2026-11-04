@@ -125,6 +125,7 @@ const posts = (await getCollection('writeups', ({ data }) => !data.draft))
     n.alert = 1; flagged++;
     edges.forEach((e) => { if (e.a === i || e.b === i) e.heat = 1; });
     logLine(threats[Math.floor(Math.random() * threats.length)], n.name);
+    window.dispatchEvent(new Event('detection'));
   }
 
   function draw() {

@@ -11,7 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "astro": "^7.4.5"
+    "astro": "^7.4.5",
+    "snd-lib": "^1.2.4"
   },
   "type": "module"
 }

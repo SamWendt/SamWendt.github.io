@@ -31,6 +31,7 @@ const links = [
         <a class="logo" href="/"><span class="dot"></span><span class="name">{site.name}</span></a>
         <nav class="nav-links">
           {links.map((l) => <a href={l.href} class={path.startsWith(l.href) ? 'active' : ''}>{l.label}</a>)}
+          <button id="sound" class="sound" type="button" aria-pressed="false">Sound off</button>
         </nav>
       </div>
     </header>
@@ -45,5 +46,53 @@ const links = [
         </nav>
       </div>
     </footer>
+    <script>
+      import SndLib from 'snd-lib';
+      // snd-lib ships as CommonJS; unwrap the default export so it works when bundled
+      const Snd: any = (SndLib as any).default ?? SndLib;
+
+      const btn = document.getElementById('sound') as HTMLButtonElement;
+      let on = false;
+      try { on = localStorage.getItem('sound') === 'on'; } catch {}
+
+      // UI sounds by SND (snd.dev), "sine" kit, free to use. Loaded only when sound is on.
+      const snd = new Snd({ easySetup: false });
+      let ready: Promise<void> | null = null;
+      const load = () => (ready ??= snd.load(Snd.KITS.SND01));
+      const play = (fn: () => void) => { if (on) load().then(fn).catch(() => {}); };
+
+      function render() {
+        btn.textContent = on ? 'Sound on' : 'Sound off';
+        btn.setAttribute('aria-pressed', String(on));
+      }
+      render();
+
+      btn.addEventListener('click', () => {
+        on = !on;
+        try { localStorage.setItem('sound', on ? 'on' : 'off'); } catch {}
+        render();
+        if (on) load().then(() => snd.playToggleOn()).catch(() => {});
+        else snd.playToggleOff();
+      });
+
+      if (on) load().catch(() => {});
+
+      document.addEventListener('click', (e) => {
+        if (!on || e.defaultPrevented) return;
+        const t = (e.target as HTMLElement).closest('a, .btn') as HTMLElement | null;
+        if (!t || t.id === 'sound') return;
+        snd.playButton();
+        // let the sound play before an internal link navigates away
+        const a = t.closest('a') as HTMLAnchorElement | null;
+        const internal = a && a.origin === location.origin && !a.target && !a.hasAttribute('download');
+        const modified = (e as MouseEvent).metaKey || (e as MouseEvent).ctrlKey || (e as MouseEvent).shiftKey || (e as MouseEvent).button !== 0;
+        if (a && internal && !modified && a.href !== location.href) {
+          e.preventDefault();
+          setTimeout(() => { location.href = a.href; }, 160);
+        }
+      });
+
+      window.addEventListener('detection', () => play(() => snd.playNotification({ volume: 0.5 })));
+    </script>
   </body>
 </html>
