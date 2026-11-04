@@ -44,8 +44,13 @@ a { color: inherit; }
 /* Sound toggle */
 .sound {
   font: inherit; font-size: 0.85rem; color: var(--muted); background: none; cursor: pointer;
-  border: 1px solid var(--rule); padding: 3px 10px;
+  border: 1px solid var(--rule); padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
+.sound .waves { display: none; }
+.sound[aria-pressed='true'] .waves { display: inline; }
+.sound[aria-pressed='true'] .mute { display: none; }
+.nav-links a { white-space: nowrap; }
+.logo { margin-right: 16px; white-space: nowrap; }
 .sound:hover { color: var(--ink); border-color: var(--ink); }
 .sound[aria-pressed='true'] { color: var(--signal); border-color: var(--signal); }
 .nav-links { align-items: center; }
@@ -150,12 +155,24 @@ footer a:hover { color: var(--ink); }
 @media (max-width: 760px) {
   .nav-links { gap: 16px; }
   .nav-links a { font-size: 0.88rem; }
-  .sound { font-size: 0.78rem; padding: 2px 7px; }
+  .sound { padding: 6px 8px; }
+  .sound .label { display: none; }
+  .log ul { min-height: 4.2em; }
+  .log li:nth-child(n+4) { display: none; }
   .logo .name { display: none; }
-  .hero { min-height: 100svh; align-items: flex-start; padding-top: 110px; }
-  .hero::after { background: linear-gradient(180deg, var(--paper) 0%, rgba(236,238,241,0.85) 48%, rgba(236,238,241,0.2) 100%); }
+  .hero { min-height: 0; display: block; padding: 120px 0 400px; }
+  .hero canvas { top: auto; bottom: 0; height: 380px;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%);
+            mask-image: linear-gradient(180deg, transparent 0, #000 18%); }
+  .hero::after { display: none; }
+  .log { bottom: 16px; right: 16px; width: calc(100% - 32px); }
   .row { grid-template-columns: 1fr; gap: 8px; }
   .posts a { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (max-width: 380px) {
+  .nav-links { gap: 12px; }
+  .nav-links a { font-size: 0.84rem; }
+  .wrap { padding: 0 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
