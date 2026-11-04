@@ -1,0 +1,20 @@
+---
+interface Project { title: string; description: string; tags: string[]; status: string; link: string; }
+const { items } = Astro.props as { items: Project[] };
+const cls = (s: string) => (s === 'Done' ? 'done' : s === 'In progress' ? 'progress' : '');
+---
+<div class="rows">
+  {items.map((p) => {
+    const Tag = p.link ? 'a' : 'div';
+    return (
+      <Tag class="row" href={p.link || undefined}>
+        <h3>{p.title}</h3>
+        <div>
+          <p>{p.description}</p>
+          <div class="stack">{p.tags.join(', ')}</div>
+        </div>
+        <span class={`status ${cls(p.status)}`}><i></i>{p.status}</span>
+      </Tag>
+    );
+  })}
+</div>

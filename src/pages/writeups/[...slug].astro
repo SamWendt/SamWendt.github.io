@@ -10,13 +10,15 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content } = await render(post);
 const date = post.data.date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+const meta = [post.data.platform, date, post.data.tags.join(', ')].filter(Boolean).join(', ');
 ---
 <Base title={post.data.title} description={post.data.summary}>
-  <article class="post">
-    <a href="/writeups" class="meta">← All write-ups</a>
-    <h1>{post.data.title}</h1>
-    <div class="meta">{post.data.platform && `${post.data.platform} · `}{date}</div>
-    <div class="tags" style="margin-bottom: 30px;">{post.data.tags.map((t) => <span class="tag">{t}</span>)}</div>
-    <div class="prose"><Content /></div>
-  </article>
+  <div class="wrap">
+    <article class="post">
+      <a href="/writeups" class="back">Back to write-ups</a>
+      <h1>{post.data.title}</h1>
+      <div class="meta">{meta}</div>
+      <div class="prose"><Content /></div>
+    </article>
+  </div>
 </Base>

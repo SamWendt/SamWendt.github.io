@@ -1,28 +1,19 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
 import { getCollection } from 'astro:content';
 
 const posts = (await getCollection('writeups', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const fmt = (d: Date) => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 ---
 <Base title="Write-ups">
-  <section class="hero" style="padding-bottom: 20px;">
-    <p class="kicker">~/writeups</p>
-    <h1>Write-ups</h1>
-    <p class="lead">Notes from labs, challenges and projects: what I tried, what worked and what I learned.</p>
-  </section>
-  <section>
-    <ul class="post-list">
-      {posts.map((post) => (
-        <li>
-          <div>
-            <a href={`/writeups/${post.id}`}>{post.data.title}</a>
-            <div class="meta">{post.data.summary}</div>
-          </div>
-          <span class="meta">{post.data.platform && `${post.data.platform} · `}{fmt(post.data.date)}</span>
-        </li>
-      ))}
-    </ul>
+  <div class="page-head">
+    <div class="wrap">
+      <h1>Write-ups</h1>
+      <p>Notes from labs, challenges and projects: what I tried, what worked and what I learned.</p>
+    </div>
+  </div>
+  <section style="padding-top: 48px;">
+    <div class="wrap"><PostList posts={posts} /></div>
   </section>
 </Base>

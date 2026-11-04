@@ -2,41 +2,41 @@
 import Base from '../layouts/Base.astro';
 import { site } from '../data/site';
 
-const skills = {
-  'Learning now': ['Python', 'SQL', 'Linux', 'C'],
-  Data: ['Spark', 'Hadoop', 'MongoDB', 'Power BI', 'R'],
-  Security: ['pwn.college', 'Hack The Box', 'Log analysis'],
-};
+const skills = [
+  { group: 'Learning now', items: 'Python, SQL, Linux, C' },
+  { group: 'Data', items: 'Spark, Hadoop, MongoDB, Power BI, R' },
+  { group: 'Security', items: 'pwn.college, Hack The Box, log analysis' },
+];
 ---
 <Base title="About">
-  <section class="hero" style="padding-bottom: 20px;">
-    <p class="kicker">~/about</p>
-    <h1>About me</h1>
-    <p class="lead">
-      I'm a Computer Science student at Griffith University majoring in Algorithms &amp; Computing and Data Science &amp; AI, based in {site.location}.
-      I'm focused on the overlap of data engineering and cybersecurity: building pipelines that make security data useful.
-    </p>
-  </section>
+  <div class="page-head">
+    <div class="wrap">
+      <h1>About me</h1>
+      <p>
+        I'm studying Computer Science at Griffith University, majoring in Algorithms &amp; Computing and Data Science &amp; AI.
+        I'm focused on the overlap of data engineering and cybersecurity: building pipelines that turn raw security data into something useful.
+      </p>
+    </div>
+  </div>
 
-  <section>
-    <h2 class="section-title">Skills</h2>
-    <div class="grid">
-      {Object.entries(skills).map(([group, items]) => (
-        <div class="card">
-          <h3>{group}</h3>
-          <div class="tags">{items.map((s) => <span class="tag">{s}</span>)}</div>
-        </div>
-      ))}
+  <section style="padding-top: 56px;">
+    <div class="wrap">
+      <div class="section-head"><h2>Skills</h2></div>
+      <div class="skills">
+        {skills.map((s) => (<div><h3>{s.group}</h3><p>{s.items}</p></div>))}
+      </div>
     </div>
   </section>
 
   <section>
-    <h2 class="section-title">Contact</h2>
-    <p>Open to internships, WIL placements and graduate roles in data or security.</p>
-    <div class="btns">
-      <a class="btn primary" href={`mailto:${site.email}`}>Email me</a>
-      <a class="btn" href={site.github}>GitHub</a>
-      <a class="btn" href={site.linkedin}>LinkedIn</a>
+    <div class="wrap">
+      <div class="section-head"><h2>Get in touch</h2></div>
+      <p style="color: var(--muted); margin: 0 0 24px;">Open to internships, WIL placements and graduate roles in data or security, based in {site.location}.</p>
+      <div class="btns">
+        <a class="btn primary" href={`mailto:${site.email}`}>Email me</a>
+        <a class="btn" href={site.github}>GitHub</a>
+        <a class="btn" href={site.linkedin}>LinkedIn</a>
+      </div>
     </div>
   </section>
 </Base>

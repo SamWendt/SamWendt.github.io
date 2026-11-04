@@ -1,0 +1,18 @@
+---
+import type { CollectionEntry } from 'astro:content';
+const { posts } = Astro.props as { posts: CollectionEntry<'writeups'>[] };
+const fmt = (d: Date) => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+---
+<ul class="posts">
+  {posts.map((post) => (
+    <li>
+      <a href={`/writeups/${post.id}`}>
+        <div>
+          <div class="title">{post.data.title}</div>
+          <div class="summary">{post.data.platform ? `${post.data.platform}: ` : ''}{post.data.summary}</div>
+        </div>
+        <span class="date">{fmt(post.data.date)}</span>
+      </a>
+    </li>
+  ))}
+</ul>

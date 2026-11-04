@@ -1,48 +1,210 @@
 ---
 import Base from '../layouts/Base.astro';
-import { site } from '../data/site';
+import ProjectRows from '../components/ProjectRows.astro';
+import PostList from '../components/PostList.astro';
 import { projects } from '../data/projects';
 import { getCollection } from 'astro:content';
 
 const posts = (await getCollection('writeups', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 3);
-const fmt = (d: Date) => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 ---
 <Base>
   <section class="hero">
-    <p class="kicker">$ whoami</p>
-    <h1>Hi, I'm {site.name.split(' ')[0]}.<br /><span class="grad">Data &amp; security.</span></h1>
-    <p class="lead">CS student at Griffith University (Data Science &amp; AI), building at the intersection of data engineering and cybersecurity. Learning in public: labs, write-ups and projects.</p>
-    <div class="btns">
-      <a class="btn primary" href="/projects">View projects</a>
-      <a class="btn" href="/writeups">Read write-ups</a>
-    </div>
-  </section>
-
-  <section>
-    <h2 class="section-title">Featured projects</h2>
-    <div class="grid">
-      {projects.slice(0, 3).map((p) => (
-        <div class="card">
-          <span class="status">{p.status}</span>
-          <h3>{p.link ? <a href={p.link}>{p.title}</a> : p.title}</h3>
-          <p>{p.description}</p>
-          <div class="tags">{p.tags.map((t) => <span class="tag">{t}</span>)}</div>
+    <canvas id="flow" aria-hidden="true"></canvas>
+    <div class="wrap" style="width: 100%;">
+      <div class="hero-copy">
+        <h1>I build pipelines that catch what matters.</h1>
+        <p>Computer Science student at Griffith University, working where data engineering meets cybersecurity. These are my projects, labs and write-ups.</p>
+        <div class="btns">
+          <a class="btn primary" href="/projects">See my projects</a>
+          <a class="btn" href="/writeups">Read write-ups</a>
         </div>
-      ))}
+      </div>
+    </div>
+    <div class="log" aria-hidden="true">
+      <div class="log-head"><span>detections.log</span><span id="count">0 flagged</span></div>
+      <ul id="log"></ul>
     </div>
   </section>
 
   <section>
-    <h2 class="section-title">Latest write-ups</h2>
-    <ul class="post-list">
-      {posts.map((post) => (
-        <li>
-          <a href={`/writeups/${post.id}`}>{post.data.title}</a>
-          <span class="meta">{post.data.platform && `${post.data.platform} · `}{fmt(post.data.date)}</span>
-        </li>
-      ))}
-    </ul>
+    <div class="wrap">
+      <div class="section-head"><h2>Projects</h2><a href="/projects">All projects</a></div>
+      <ProjectRows items={projects.slice(0, 3)} />
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head"><h2>Latest write-ups</h2><a href="/writeups">All write-ups</a></div>
+      <PostList posts={posts} />
+    </div>
   </section>
 </Base>
+
+<script>
+  const canvas = document.getElementById('flow') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const logEl = document.getElementById('log')!;
+  const countEl = document.getElementById('count')!;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const INK = '18,26,43';
+  const FLARE = '226,85,27';
+  const roles = ['web', 'db', 'vpn', 'mail', 'dc', 'files', 'api', 'cam', 'pc', 'build', 'dns', 'proxy'];
+  const counts: Record<string, number> = {};
+  function hostName() {
+    const r = roles[Math.floor(Math.random() * roles.length)];
+    counts[r] = (counts[r] || 0) + 1;
+    return `${r}-${String(counts[r]).padStart(2, '0')}`;
+  }
+  const threats = [
+    'ssh brute-force, 14 failed logins',
+    'port scan on 22, 80, 443',
+    'login from new country',
+    'suspicious powershell exec',
+    'dns query to known bad domain',
+    'privilege escalation attempt',
+    'unusual outbound transfer, 2.4 GB',
+  ];
+
+  type Node = { x: number; y: number; bx: number; by: number; phase: number; alert: number; name: string };
+  type Edge = { a: number; b: number; heat: number };
+  type Packet = { e: number; t: number; speed: number; dir: 1 | -1 };
+
+  let w = 0, h = 0, nodes: Node[] = [], edges: Edge[] = [], packets: Packet[] = [], flagged = 0, frame = 0;
+
+  function build() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = canvas.clientWidth; h = canvas.clientHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const mobile = w < 760;
+    const x0 = mobile ? w * 0.05 : w * 0.42;
+    const cols = mobile ? 4 : 7, rows = mobile ? 7 : 6;
+    const cw = (w - x0 - w * 0.04) / cols, ch = (h * 0.9) / rows;
+    nodes = [];
+    for (const k in counts) delete counts[k];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (Math.random() < 0.22) continue;
+      const bx = x0 + cw * (c + 0.5) + (Math.random() - 0.5) * cw * 0.6;
+      const by = h * 0.05 + ch * (r + 0.5) + (Math.random() - 0.5) * ch * 0.6;
+      nodes.push({ x: bx, y: by, bx, by, phase: Math.random() * Math.PI * 2, alert: 0, name: hostName() });
+    }
+    edges = [];
+    const seen = new Set<string>();
+    nodes.forEach((n, i) => {
+      const near = nodes.map((m, j) => ({ j, d: Math.hypot(m.bx - n.bx, m.by - n.by) }))
+        .filter((o) => o.j !== i).sort((a, b) => a.d - b.d).slice(0, 2 + (Math.random() < 0.4 ? 1 : 0));
+      for (const { j } of near) {
+        const k = i < j ? `${i}-${j}` : `${j}-${i}`;
+        if (!seen.has(k)) { seen.add(k); edges.push({ a: i, b: j, heat: 0 }); }
+      }
+    });
+    packets = Array.from({ length: Math.round(edges.length * 0.6) }, newPacket);
+  }
+
+  function newPacket(): Packet {
+    return { e: Math.floor(Math.random() * edges.length), t: Math.random(), speed: 0.004 + Math.random() * 0.008, dir: Math.random() < 0.5 ? 1 : -1 };
+  }
+
+  function logLine(text: string, host: string) {
+    const time = new Date().toLocaleTimeString('en-AU', { hour12: false });
+    const li = document.createElement('li');
+    li.innerHTML = `${time} <b>${host}</b> ${text}`;
+    logEl.prepend(li);
+    while (logEl.children.length > 4) logEl.lastElementChild!.remove();
+    countEl.textContent = `${flagged} flagged`;
+  }
+
+  function detect() {
+    const i = Math.floor(Math.random() * nodes.length);
+    const n = nodes[i];
+    n.alert = 1; flagged++;
+    edges.forEach((e) => { if (e.a === i || e.b === i) e.heat = 1; });
+    logLine(threats[Math.floor(Math.random() * threats.length)], n.name);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // links
+    for (const e of edges) {
+      const a = nodes[e.a], b = nodes[e.b];
+      ctx.strokeStyle = e.heat > 0.02 ? `rgba(${FLARE},${0.15 + e.heat * 0.5})` : `rgba(${INK},0.22)`;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+
+    // packets: small squares, no tails
+    for (const p of packets) {
+      const e = edges[p.e]; if (!e) continue;
+      const a = nodes[e.a], b = nodes[e.b];
+      const t = p.dir === 1 ? p.t : 1 - p.t;
+      const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t;
+      ctx.fillStyle = e.heat > 0.3 ? `rgba(${FLARE},0.95)` : `rgba(${INK},0.85)`;
+      ctx.fillRect(x - 2, y - 2, 4, 4);
+    }
+
+    // hosts
+    for (const n of nodes) {
+      const s = 8;
+      ctx.font = '10px "IBM Plex Mono", monospace';
+      if (n.alert > 0) {
+        const r = 12 + (1 - n.alert) * 34;
+        ctx.strokeStyle = `rgba(${FLARE},${n.alert * 0.9})`;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.strokeRect(n.x - r / 2, n.y - r / 2, r, r);
+        ctx.setLineDash([]);
+        // callout leader line
+        const lx = n.x + 28, ly = n.y - 26;
+        ctx.strokeStyle = `rgba(${FLARE},${Math.min(1, n.alert * 1.5)})`;
+        ctx.beginPath(); ctx.moveTo(n.x + 5, n.y - 5); ctx.lineTo(lx, ly); ctx.lineTo(lx + 64, ly); ctx.stroke();
+        ctx.fillStyle = `rgba(${FLARE},${Math.min(1, n.alert * 1.5)})`;
+        ctx.font = '500 11px "IBM Plex Mono", monospace';
+        ctx.fillText(n.name, lx + 2, ly - 5);
+      } else {
+        ctx.fillStyle = `rgba(${INK},0.4)`;
+        ctx.fillText(n.name, n.x + 8, n.y + 12);
+      }
+      ctx.fillStyle = '#f7f8fa';
+      ctx.fillRect(n.x - s / 2, n.y - s / 2, s, s);
+      ctx.strokeStyle = n.alert > 0.05 ? `rgba(${FLARE},1)` : `rgba(${INK},0.9)`;
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(n.x - s / 2, n.y - s / 2, s, s);
+    }
+  }
+
+  function step() {
+    frame++;
+    for (const n of nodes) {
+      n.phase += 0.006;
+      n.x = n.bx + Math.cos(n.phase) * 3;
+      n.y = n.by + Math.sin(n.phase * 1.3) * 3;
+      if (n.alert > 0) n.alert = Math.max(0, n.alert - 0.006);
+    }
+    for (const e of edges) if (e.heat > 0) e.heat = Math.max(0, e.heat - 0.006);
+    for (const p of packets) {
+      p.t += p.speed;
+      if (p.t >= 1) Object.assign(p, newPacket(), { t: 0 });
+    }
+    if (frame % 150 === 0 && Math.random() < 0.8) detect();
+  }
+
+  let running = true;
+  function loop() {
+    if (running) { step(); draw(); }
+    requestAnimationFrame(loop);
+  }
+
+  build();
+  let rt: number | undefined;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = window.setTimeout(build, 200); });
+  document.addEventListener('visibilitychange', () => { running = !document.hidden; });
+
+  if (reduce) { detect(); draw(); }
+  else { setTimeout(detect, 900); loop(); }
+</script>

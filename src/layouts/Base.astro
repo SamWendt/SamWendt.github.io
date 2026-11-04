@@ -4,15 +4,13 @@ import { site } from '../data/site';
 
 interface Props { title?: string; description?: string; }
 const { title, description = site.tagline } = Astro.props;
-const pageTitle = title ? `${title} · ${site.name}` : site.name;
+const pageTitle = title ? `${title} | ${site.name}` : site.name;
 const path = Astro.url.pathname;
 const links = [
-  { href: '/', label: 'Home' },
   { href: '/projects', label: 'Projects' },
   { href: '/writeups', label: 'Write-ups' },
   { href: '/about', label: 'About' },
 ];
-const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 ---
 <!doctype html>
 <html lang="en">
@@ -21,29 +19,30 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#eceef1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
     <header class="nav">
       <div class="wrap">
-        <a class="logo" href="/">{site.handle}<span>_</span></a>
+        <a class="logo" href="/"><span class="dot"></span><span class="name">{site.name}</span></a>
         <nav class="nav-links">
-          {links.map((l) => <a href={l.href} class={isActive(l.href) ? 'active' : ''}>{l.label}</a>)}
+          {links.map((l) => <a href={l.href} class={path.startsWith(l.href) ? 'active' : ''}>{l.label}</a>)}
         </nav>
       </div>
     </header>
-    <main class="wrap">
-      <slot />
-    </main>
+    <slot />
     <footer>
       <div class="wrap">
-        <span>© {new Date().getFullYear()} {site.name}</span>
-        <span>
-          <a href={site.github}>GitHub</a> · <a href={site.linkedin}>LinkedIn</a> · <a href={`mailto:${site.email}`}>Email</a>
-        </span>
+        <span>{site.name}, {site.location}</span>
+        <nav>
+          <a href={site.github}>GitHub</a>
+          <a href={site.linkedin}>LinkedIn</a>
+          <a href={`mailto:${site.email}`}>Email</a>
+        </nav>
       </div>
     </footer>
   </body>
