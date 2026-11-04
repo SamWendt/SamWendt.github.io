@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+import { projects } from '../data/projects';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('writeups', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+---
+<Base>
+  <section class="hero">
+    <p class="kicker">$ whoami</p>
+    <h1>Hi, I'm {site.name.split(' ')[0]}.<br /><span class="grad">Data &amp; security.</span></h1>
+    <p class="lead">CS student at Griffith University (Data Science &amp; AI), building at the intersection of data engineering and cybersecurity. Learning in public: labs, write-ups and projects.</p>
+    <div class="btns">
+      <a class="btn primary" href="/projects">View projects</a>
+      <a class="btn" href="/writeups">Read write-ups</a>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Featured projects</h2>
+    <div class="grid">
+      {projects.slice(0, 3).map((p) => (
+        <div class="card">
+          <span class="status">{p.status}</span>
+          <h3>{p.link ? <a href={p.link}>{p.title}</a> : p.title}</h3>
+          <p>{p.description}</p>
+          <div class="tags">{p.tags.map((t) => <span class="tag">{t}</span>)}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Latest write-ups</h2>
+    <ul class="post-list">
+      {posts.map((post) => (
+        <li>
+          <a href={`/writeups/${post.id}`}>{post.data.title}</a>
+          <span class="meta">{post.data.platform && `${post.data.platform} · `}{fmt(post.data.date)}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>

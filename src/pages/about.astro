@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+
+const skills = {
+  'Learning now': ['Python', 'SQL', 'Linux', 'C'],
+  Data: ['Spark', 'Hadoop', 'MongoDB', 'Power BI', 'R'],
+  Security: ['pwn.college', 'Hack The Box', 'Log analysis'],
+};
+---
+<Base title="About">
+  <section class="hero" style="padding-bottom: 20px;">
+    <p class="kicker">~/about</p>
+    <h1>About me</h1>
+    <p class="lead">
+      I'm a Computer Science student at Griffith University majoring in Algorithms &amp; Computing and Data Science &amp; AI, based in {site.location}.
+      I'm focused on the overlap of data engineering and cybersecurity: building pipelines that make security data useful.
+    </p>
+  </section>
+
+  <section>
+    <h2 class="section-title">Skills</h2>
+    <div class="grid">
+      {Object.entries(skills).map(([group, items]) => (
+        <div class="card">
+          <h3>{group}</h3>
+          <div class="tags">{items.map((s) => <span class="tag">{s}</span>)}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Contact</h2>
+    <p>Open to internships, WIL placements and graduate roles in data or security.</p>
+    <div class="btns">
+      <a class="btn primary" href={`mailto:${site.email}`}>Email me</a>
+      <a class="btn" href={site.github}>GitHub</a>
+      <a class="btn" href={site.linkedin}>LinkedIn</a>
+    </div>
+  </section>
+</Base>
